@@ -13,7 +13,7 @@ i.e., It perhaps satisfy the following:
 The char for index 62 = '+'
 The char for index 63 = '/'
 The pad char = '=' (mandatory)
-no CR/LF
+add '\n' for each 76 chars
 
 Memory of the value is obtained with malloc() and have to be freed with free() after you use it.
 
@@ -22,6 +22,7 @@ char * base64_decode(char *str);
 --------------------------------
 The `str` must be char* of a Base64 encoded string, and its length must be multiple of 4.
 Otherwise, it will die.
+base64_decode ignores '\n'.
 base64_decode returns char* of a Base64 decoded string.
 Memory of the value is obtained with malloc() and have to be freed with free() after you use it.
 
@@ -94,11 +95,14 @@ base64_decode(char *str)
   
   while(1) {
     if (*pstr == '\0') break;
-    
-    bits = (base64_dec_map(*pstr++) << 18)
-      | (base64_dec_map(*pstr++) << 12)
-      | (base64_dec_map(*pstr++) << 6)
-      | base64_dec_map(*pstr++);
+
+    for(int i=0; i<4; i++) {
+      int c = base64_dec_map(*pstr++);
+      if (c == NOT_A_BASE64_CHAR)
+        i--;
+      else
+        bits = (bits << 6) | c;
+    }
     
     *pdec++ = (bits & 0xff0000) >> 16;
     *pdec++ = (bits & 0x00ff00) >> 8;
@@ -109,13 +113,13 @@ base64_decode(char *str)
   return dec;
 }
 
-char base64_dec_map(char c) {
+int base64_dec_map(char c) {
   if (isupper(c)) return c - 'A';
   if (islower(c)) return c - 'a' + 26;
   if (isdigit(c)) return c - '0' + 26 + 26;
   if (c == '+') return 62;
   if (c == '/') return 63;
   if (c == '=') return 0;
-  assert(0);
+  return NOT_A_BASE64_CHAR;
 }
 
