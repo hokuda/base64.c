@@ -2,30 +2,7 @@
 
 Base64 encoder/decoder
 
-
-char * base64_encode(char *str);
---------------------------------
-The `str` must be char* which points a sequence of positive char values < 128.
-base64_encode returns char* of a Base64 encoded string which may be compliant with
-https://en.wikipedia.org/wiki/Base64#RFC_4648 as possible,
-i.e., It perhaps satisfy the following:
-
-The char for index 62 = '+'
-The char for index 63 = '/'
-The pad char = '=' (mandatory)
-no CR/LF
-
-Memory of the value is obtained with malloc() and have to be freed with free() after you use it.
-
-
-char * base64_decode(char *str);
---------------------------------
-The `str` must be char* of a Base64 encoded string, and its length must be multiple of 4.
-Otherwise, it will die.
-base64_decode returns char* of a Base64 decoded string.
-Memory of the value is obtained with malloc() and have to be freed with free() after you use it.
-
- */
+*/
 
 #include <stdio.h>
 #include <string.h>
@@ -36,6 +13,13 @@ Memory of the value is obtained with malloc() and have to be freed with free() a
 
 #include "base64.h"
 
+/*
+  returns base64-encoded string which may be compliant with 
+  https://en.wikipedia.org/wiki/Base64#RFC_4648 as possible, e.g., char for
+  index 62 is '+', char for index 63 = '/', pad char is '=', and it has no
+  CR/LF. Memory of the value is obtained with malloc() and have to be freed
+  with free().
+*/
 char *
 base64_encode(char *str)
 {
@@ -45,7 +29,7 @@ base64_encode(char *str)
   char *enc = malloc(((strlen(str)*4/3 + 3) & ~0x03) + 1);
   char *penc = enc;
   
-  int bits = 0x00000000;
+  int bits = 0;
   
   
   for (; *pstr; pstr++) {
@@ -83,22 +67,48 @@ base64_encode(char *str)
   return enc;
 }
 
+
+/* maps base64-char to bits */
+int base64_dec_map(char c) {
+  if (isupper(c)) return c - 'A';
+  if (islower(c)) return c - 'a' + 26;
+  if (isdigit(c)) return c - '0' + 26 + 26;
+  if (c == '+') return 62;
+  if (c == '/') return 63;
+  if (c == '=') return 0;
+  return NOT_A_BASE64_CHAR;
+}
+
+
+/*
+  returns base64-decoded string ignoring non-base64-chars. An effective
+  length of str must be multiple of 4, otherwise, it will die. Memory of
+  the value is obtained with malloc() and have to be freed with free().
+*/
 char *
 base64_decode(char *str)
 {
   char *pstr = str;
   char *dec = malloc(strlen(str)*3/4 + 1);
   char *pdec = dec;
+  int skip_count = 0;
   
   int bits;
   
   while(1) {
     if (*pstr == '\0') break;
-    
-    bits = (base64_dec_map(*pstr++) << 18)
-      | (base64_dec_map(*pstr++) << 12)
-      | (base64_dec_map(*pstr++) << 6)
-      | base64_dec_map(*pstr++);
+
+    for(int i=0; i<4; i++) {
+      assert(*pstr != '\0');
+
+      int c = base64_dec_map(*pstr++);
+      if (c == NOT_A_BASE64_CHAR) {
+        i--;
+        skip_count++;
+      }
+      else
+        bits = (bits << 6) | c;
+    }
     
     *pdec++ = (bits & 0xff0000) >> 16;
     *pdec++ = (bits & 0x00ff00) >> 8;
@@ -106,16 +116,8 @@ base64_decode(char *str)
   }
   *pdec = '\0';
 
-  return dec;
-}
+  assert(((uintptr_t)(pstr - str) - skip_count) % 4 == 0);
 
-char base64_dec_map(char c) {
-  if (isupper(c)) return c - 'A';
-  if (islower(c)) return c - 'a' + 26;
-  if (isdigit(c)) return c - '0' + 26 + 26;
-  if (c == '+') return 62;
-  if (c == '/') return 63;
-  if (c == '=') return 0;
-  assert(0);
+  return dec;
 }
 
