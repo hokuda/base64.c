@@ -8,7 +8,7 @@
 #include "base64.h"
 
 void test1() {
-  printf("test1\n");
+  printf("-------------------- test1 --------------------\n");
   
   char *str = "The problem resolver";
 
@@ -26,9 +26,9 @@ void test1() {
 }
 
 void test2() {
-  printf("test1\n");
+  printf("-------------------- test2 --------------------\n");
 
-  char * enc = "VGhlIHB\ty\nb 2!@#$%^&*()_JsZW0gcmVzb2x2ZXI=";
+  char * enc = "VGhlIHB\ty\nb 2!@#$%^&*()_JsZW0gcmVzb2x2ZXI=\n";
 
   printf("enc =%s\n", enc);
 

@@ -96,24 +96,24 @@ base64_decode(char *str)
   int bits;
   
   while(1) {
-    if (*pstr == '\0') break;
-
-    for(int i=0; i<4; i++) {
-      assert(*pstr != '\0');
+    
+    int i=0;
+    while(i<4) {
+      if (*pstr == '\0') goto OUT;
 
       int c = base64_dec_map(*pstr++);
       if (c == NOT_A_BASE64_CHAR) {
-        i--;
         skip_count++;
+        continue;
       }
-      else
-        bits = (bits << 6) | c;
+      bits = (bits << 6) | c;
+      i++;
     }
-    
     *pdec++ = (bits & 0xff0000) >> 16;
     *pdec++ = (bits & 0x00ff00) >> 8;
     *pdec++ = (bits & 0x0000ff);
   }
+ OUT:
   *pdec = '\0';
 
   assert(((uintptr_t)(pstr - str) - skip_count) % 4 == 0);
