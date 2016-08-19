@@ -2,30 +2,6 @@
 
 Base64 encoder/decoder
 
-
-char * base64_encode(char *str);
---------------------------------
-The `str` must be char* which points a sequence of positive char values < 128.
-base64_encode returns char* of a Base64 encoded string which may be compliant with
-https://en.wikipedia.org/wiki/Base64#RFC_4648 as possible,
-i.e., It perhaps satisfy the following:
-
-The char for index 62 = '+'
-The char for index 63 = '/'
-The pad char = '=' (mandatory)
-add '\n' for each 76 chars
-
-Memory of the value is obtained with malloc() and have to be freed with free() after you use it.
-
-
-char * base64_decode(char *str);
---------------------------------
-The `str` must be char* of a Base64 encoded string, and its length must be multiple of 4.
-Otherwise, it will die.
-base64_decode ignores '\n'.
-base64_decode returns char* of a Base64 decoded string.
-Memory of the value is obtained with malloc() and have to be freed with free() after you use it.
-
  */
 
 #include <stdio.h>
@@ -40,6 +16,19 @@ Memory of the value is obtained with malloc() and have to be freed with free() a
 char *
 base64_encode(char *str)
 {
+    /*
+	The `str` must be char* which points a sequence of positive char values < 128.
+	base64_encode returns char* of a Base64 encoded string which may be compliant with
+	https://en.wikipedia.org/wiki/Base64#RFC_4648 as possible,
+	i.e., It perhaps satisfy the following:
+
+	The char for index 62 = '+'
+The char for index 63 = '/'
+The pad char = '=' (mandatory)
+no CR/LF
+
+Memory of the value is obtained with malloc() and have to be freed with free() after you use it.
+*/
   char *base64_enc_map = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
   char *pstr = str;
@@ -87,6 +76,13 @@ base64_encode(char *str)
 char *
 base64_decode(char *str)
 {
+/*
+The `str` must be char* of a Base64 encoded string, and its length must be multiple of 4.
+Otherwise, it will die.
+base64_decode ignores non-base64-chars.
+base64_decode returns char* of a Base64 decoded string.
+Memory of the value is obtained with malloc() and have to be freed with free() after you use it.
+*/
   char *pstr = str;
   char *dec = malloc(strlen(str)*3/4 + 1);
   char *pdec = dec;
