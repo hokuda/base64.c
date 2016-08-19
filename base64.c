@@ -60,7 +60,7 @@ base64_encode(char *str)
     *penc++ = '=';
   }
 
-  *penc = 0;
+  *penc = '\0';
 
   assert((uintptr_t)(penc - enc) % 4 == 0);
   
